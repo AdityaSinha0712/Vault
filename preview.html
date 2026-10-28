@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Preview</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap" />
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module">
+      import React from 'react';
+      import { createRoot } from 'react-dom/client';
+      import '/src/styles/index.css';
+      import MessageRow from '/src/user/MessageRow.jsx';
+      import RoundTripCheck from '/src/admin/RoundTripCheck.jsx';
+      const content = "\n  Leading newline, two-space indent\n\tTab-indented line\n\n\nThree blank-line gap above.   Trailing spaces→   \n“Smart quotes” and \"straight\" -- double dash — em dash\nEmoji: 👋🏽 👨‍👩‍👧 ✅\n<b>not bold</b> **not markdown** &amp;\nnbsp:\u00a0here\n";
+      window.__expected = content;
+      const msg = { id: 'demo', title: 'Tricky sample', content, order: 0, createdAt: new Date(), updatedAt: new Date(), pending: false, position: 1 };
+      createRoot(document.getElementById('root')).render(
+        React.createElement('main', { className: 'wrap' },
+          React.createElement('ol', { className: 'list' }, React.createElement(MessageRow, { message: msg })),
+          React.createElement(RoundTripCheck, { idPrefix: 'chk', expected: content, onClose: () => {} })
+        )
+      );
+    </script>
+  </body>
+</html>

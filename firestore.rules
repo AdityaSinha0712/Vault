@@ -1,0 +1,45 @@
+rules_version = '2';
+
+// Vault has no Firebase Authentication, so these rules CANNOT tell Admin
+// from User. Anyone who has this project's web config (it ships inside the
+// JS bundle) can read and write. What these rules do enforce:
+//   - only the `messages` collection is reachable
+//   - documents have exactly the expected fields and types
+//   - timestamps come from the server, createdAt never changes
+//   - content is a non-empty string under a size cap
+// See README "Security" for how to tighten this.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    match /messages/{messageId} {
+      function isValidMessage(d) {
+        return d.keys().hasOnly(['title', 'content', 'order', 'createdAt', 'updatedAt'])
+          && d.keys().hasAll(['title', 'content', 'order', 'createdAt', 'updatedAt'])
+          && d.title is string && d.title.size() <= 120
+          && d.content is string && d.content.size() > 0 && d.content.size() <= 200000
+          && d.order is number
+          && d.createdAt is timestamp
+          && d.updatedAt is timestamp;
+      }
+
+      allow read: if true;
+
+      allow create: if isValidMessage(request.resource.data)
+        && request.resource.data.createdAt == request.time
+        && request.resource.data.updatedAt == request.time;
+
+      // Content edits set updatedAt to the server time; reorders leave it alone.
+      allow update: if isValidMessage(request.resource.data)
+        && request.resource.data.createdAt == resource.data.createdAt
+        && (request.resource.data.updatedAt == resource.data.updatedAt
+            || request.resource.data.updatedAt == request.time);
+
+      allow delete: if true;
+    }
+
+    // Everything else is closed.
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
